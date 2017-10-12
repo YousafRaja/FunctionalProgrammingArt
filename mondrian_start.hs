@@ -38,17 +38,27 @@ rl_helper g = fst vg : rl_helper (snd vg)
 randomInt :: Int -> Int -> Float -> Int
 randomInt low high x = round ((fromIntegral (high - low) * x) + fromIntegral low)
 
+-- Generate a tag for a random colored square given x y w h and a random float r between 0 and 1
+makeRanSquare :: (Int, Int) -> (Int, Int) -> Float -> String
+makeRanSquare (x,y) (w,h) r
+  | r>=0.6 = makeSquare x y w h (1, 1, 1)
+  | r<0.6 && r>=0.4 = makeSquare x y w h (1, 0, 0) -- red
+  | r<0.4 && r>=0.2 = makeSquare x y w h (0, 0, 1) -- blue
+  | r<0.2 && r>=0.0 = makeSquare x y w h (1, 1, 0) -- yellow
+
+
+
 -- Generate a tag for a square given x y w h and the R G B values as percentages
-getSquare :: Int -> Int -> Int -> Int -> (Float, Float, Float) -> String
-getSquare x y w h (r, g, b) = "<rect x=" ++ (show x) ++ 
+makeSquare :: Int -> Int -> Int -> Int -> (Float, Float, Float) -> String
+makeSquare x y w h (r, g, b) = "<rect x=" ++ (show x) ++ 
        " y=" ++ (show y) ++ 
        " width=" ++ (show w) ++ 
        " height=" ++ (show h) ++ 
        " stroke=\"None\"" ++
        " fill=\"rgb(" ++ (show (round (r * 255))) ++ "," ++
                          (show (round (g * 255))) ++ "," ++
-                         (show (round (b * 255))) ++ ")\" />\n"				 
-						 
+                         (show (round (b * 255))) ++ ")\" />\n" 
+
 -- Generate a tag for a line given x1 y1 x2 y2 stroke(r,g,b) and stroke-width
 makeLine :: (Int, Int) -> (Int, Int) -> (Int, Int, Int) -> Int -> String
 makeLine (x1, y1) (x2, y2) (r, g, b) w = "<line x1=\"" ++ x1_s ++ "\" y1=\"" ++ y1_s ++ 
@@ -79,15 +89,26 @@ makeLine (x1, y1) (x2, y2) (r, g, b) w = "<line x1=\"" ++ x1_s ++ "\" y1=\"" ++ 
 --   [Float]: The remaining, unused random values
 --   String: The SVG tags that draw the image
 --
+
+--(snd (mondrian (ranWidth) (ranHeight) (w) (h) (s:rs)))
+-- (ranWidth + (w-ranWidth)) (ranHeight + (h-ranHeight))
 mondrian :: Int -> Int -> Int -> Int -> [Float] -> ([Float], String)
-mondrian x y w h (r:s:t:rs) 
-  |w==width && h==height = (rs, quadSplit ) -- ++ snd (mondrian (x) (y) (w-5) (h-5) (s:rs)))
-  | otherwise = (rs, "")  
-  where   
-   canvasSquare = getSquare x y w h (0,0,0) ++ getSquare (x+border) (y+border) (w-(border*2)) (h-(border*2)) (1,1,1)
+mondrian x y w h (r:s:t:u:rs) 
+  |w==width && h==height =  (s:rs, canvasSquare ++ quadSplit ++ 
+  (snd (mondrian (x) (y) (ranWidth) (ranHeight) (r:rs))) ++ 
+  (snd (mondrian (ranWidth+(border `div` 2)) (y) ( w-(ranWidth)-(border*2) ) (ranHeight)  (s:rs))) ++ 
+  (snd (mondrian (ranWidth+(border `div` 2)) (ranHeight +(border `div`2)) ( w-(ranWidth)-(border*2) ) (h-(ranHeight)-(border*2))  (t:rs))) ++ 
+  (snd (mondrian (x) (ranHeight +(border `div`2)) (ranWidth) (h-(ranHeight)-(border*2))  (u:rs)))   ) 
+  |otherwise = (s:rs, regSquare)  
+  
+  where
+   ranWidth = (round (r*(fromIntegral w))) - (border*2)
+   ranHeight = (round (r*(fromIntegral h))) - (border*2)
+   canvasSquare = makeSquare x y w h (0,0,0) ++ makeSquare (x+border) (y+border) (w-(border*2)) (h-(border*2)) (0.5,0.5,0.5)
+   regSquare = makeRanSquare (x+border,y+border) (w-(border `div` 2),h-(border `div` 2)) r 
    testLine = makeLine (0,0) (w,h) (12,12,11) 10   
-   ranVerLine = makeLine ((round (r*(fromIntegral w))), 0) ((round (r*(fromIntegral w))), h) (122, 1, 1) 20  
-   ranHorLine = makeLine (0, (round (r*(fromIntegral h)))) (w, (round (r*(fromIntegral h)))) (1, 221, 1) 20  
+   ranVerLine = makeLine (ranWidth+border, y+border) ((round (r*(fromIntegral w)))-border, h-border) (122, 1, 1) border  
+   ranHorLine = makeLine (x+border, ranHeight+border) (w-border, (round (r*(fromIntegral h)))-border) (1, 221, 1) border  
    quadSplit = ranVerLine ++ ranHorLine
 -- fillSquare
  
