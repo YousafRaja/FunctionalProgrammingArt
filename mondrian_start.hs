@@ -102,13 +102,13 @@ mondrian x y w h (r:s:t:u:rs)
   |otherwise = (s:rs, regSquare)  
   
   where
-   ranWidth = (round (r*(fromIntegral w))) - (border*2)
-   ranHeight = (round (r*(fromIntegral h))) - (border*2)
+   ranWidth = border + (round (r*(fromIntegral (w-border*2)))) 
+   ranHeight = border + (round (r*(fromIntegral (h-border*2))))
    canvasSquare = makeSquare x y w h (0,0,0) ++ makeSquare (x+border) (y+border) (w-(border*2)) (h-(border*2)) (0.5,0.5,0.5)
-   regSquare = makeRanSquare (x+border,y+border) (w-(border `div` 2),h-(border `div` 2)) r 
+   regSquare = makeRanSquare (x+border,y+border) ((w),ranHeight) r 
    testLine = makeLine (0,0) (w,h) (12,12,11) 10   
-   ranVerLine = makeLine (ranWidth+border, y+border) ((round (r*(fromIntegral w)))-border, h-border) (122, 1, 1) border  
-   ranHorLine = makeLine (x+border, ranHeight+border) (w-border, (round (r*(fromIntegral h)))-border) (1, 221, 1) border  
+   ranVerLine = makeLine (ranWidth, y) (ranWidth, h) (122, 1, 1) border  
+   ranHorLine = makeLine (x, ranHeight) (w, ranHeight) (1, 221, 1) border  
    quadSplit = ranVerLine ++ ranHorLine
 -- fillSquare
  
