@@ -89,7 +89,7 @@ makeLine (x1, y1) (x2, y2) (r, g, b) w = "<line x1=\"" ++ x1_s ++ "\" y1=\"" ++ 
 --   [Float]: The remaining, unused random values
 --   String: The SVG tags that draw the image
 --
-
+ 
 --(snd (mondrian (ranWidth) (ranHeight) (w) (h) (s:rs)))
 -- (ranWidth + (w-ranWidth)) (ranHeight + (h-ranHeight))
 mondrian :: Int -> Int -> Int -> Int -> [Float] -> ([Float], String)
