@@ -1,6 +1,6 @@
 --
 -- Starting code for CPSC 449 Assignment 1
---
+-- 
 -- Generate and output a Mondrian-style image as an SVG tag within an HTML 
 -- document.
 -- 
@@ -16,6 +16,9 @@ width = 1024
 
 height :: Int
 height = 768
+
+border :: Int
+border = 20
 
 --
 -- Generate and return a list of 20000 random floating point numbers between 
@@ -44,7 +47,23 @@ getSquare x y w h (r, g, b) = "<rect x=" ++ (show x) ++
        " stroke=\"None\"" ++
        " fill=\"rgb(" ++ (show (round (r * 255))) ++ "," ++
                          (show (round (g * 255))) ++ "," ++
-                         (show (round (b * 255))) ++ ")\" />\n"
+                         (show (round (b * 255))) ++ ")\" />\n"				 
+						 
+-- Generate a tag for a line given x1 y1 x2 y2 stroke(r,g,b) and stroke-width
+makeLine :: (Int, Int) -> (Int, Int) -> (Int, Int, Int) -> Int -> String
+makeLine (x1, y1) (x2, y2) (r, g, b) w = "<line x1=\"" ++ x1_s ++ "\" y1=\"" ++ y1_s ++ 
+                                        "\" x2=\"" ++ x2_s ++ "\" y2=\"" ++ y2_s ++
+                                        "\" style=\"stroke:rgb(" ++ rgb_s ++ ");stroke-width:" ++ w_s ++ "\"/>"
+        where 
+        x1_s = show (x1)
+        y1_s = show (y1)
+        x2_s = show (x2)
+        y2_s = show (y2)
+        w_s  = show (w)
+        r_s  = show (r)
+        b_s  = show (b)
+        g_s  = show (g)
+        rgb_s = show(r) ++ "," ++ show(g) ++ "," ++ show(b) 
 
 --
 -- Generate the tag for a rectangle with random color.  Replace the 
@@ -62,21 +81,15 @@ getSquare x y w h (r, g, b) = "<rect x=" ++ (show x) ++
 --
 mondrian :: Int -> Int -> Int -> Int -> [Float] -> ([Float], String)
 mondrian x y w h (r:s:t:rs) 
-  |w>=50 = (rs, "<rect x=" ++ (show x) ++ 
-       " y=" ++ (show y) ++ 
-       " width=" ++ (show w) ++ 
-       " height=" ++ (show h) ++ 
-       " stroke=\"None\"" ++
-       " fill=\"rgb(" ++ (show (round (r * 255))) ++ "," ++
-                         (show (round (s * 255))) ++ "," ++
-                         (show (round (t * 255))) ++ ")\" />\n" ++ snd (mondrian (x) (y) (w-5) (h-5) (s:rs)))
+  |w==width && h==height = (rs, quadSplit ) -- ++ snd (mondrian (x) (y) (w-5) (h-5) (s:rs)))
   | otherwise = (rs, "")  
   where   
---   blankSquare = getSquare 0 0 0
---   randomSquare = getSquare r s t    
- 
-
-
+   canvasSquare = getSquare x y w h (0,0,0) ++ getSquare (x+border) (y+border) (w-(border*2)) (h-(border*2)) (1,1,1)
+   testLine = makeLine (0,0) (w,h) (12,12,11) 10   
+   ranVerLine = makeLine ((round (r*(fromIntegral w))), 0) ((round (r*(fromIntegral w))), h) (122, 1, 1) 20  
+   ranHorLine = makeLine (0, (round (r*(fromIntegral h)))) (w, (round (r*(fromIntegral h)))) (1, 221, 1) 20  
+   quadSplit = ranVerLine ++ ranHorLine
+-- fillSquare
  
   
 
