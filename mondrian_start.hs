@@ -41,7 +41,7 @@ randomInt low high x = round ((fromIntegral (high - low) * x) + fromIntegral low
 -- Generate a tag for a random colored square given x y w h and a random float r between 0 and 1
 makeRanSquare :: (Int, Int) -> (Int, Int) -> Float -> String
 makeRanSquare (x,y) (w,h) r
-  | r>=0.6 = makeSquare x y w h (1, 1, 1)
+  | r>=0.6 = makeSquare x y w h (0.3, 0.2, 0.3) -- place holder for white
   | r<0.6 && r>=0.4 = makeSquare x y w h (1, 0, 0) -- red
   | r<0.4 && r>=0.2 = makeSquare x y w h (0, 0, 1) -- blue
   | r<0.2 && r>=0.0 = makeSquare x y w h (1, 1, 0) -- yellow
@@ -92,24 +92,39 @@ makeLine (x1, y1) (x2, y2) (r, g, b) w = "<line x1=\"" ++ x1_s ++ "\" y1=\"" ++ 
  
 --(snd (mondrian (ranWidth) (ranHeight) (w) (h) (s:rs)))
 -- (ranWidth + (w-ranWidth)) (ranHeight + (h-ranHeight))
+--   |w>(width `div` 2) && h>(height `div` 2) =  (s:rs, quadSplit ) 
+
 mondrian :: Int -> Int -> Int -> Int -> [Float] -> ([Float], String)
-mondrian x y w h (r:s:t:u:rs) 
-  |w==width && h==height =  (s:rs, canvasSquare ++ quadSplit ++ 
-  (snd (mondrian (x) (y) (ranWidth) (ranHeight) (r:rs))) ++ 
-  (snd (mondrian (ranWidth+(border `div` 2)) (y) ( w-(ranWidth)-(border*2) ) (ranHeight)  (s:rs))) ++ 
-  (snd (mondrian (ranWidth+(border `div` 2)) (ranHeight +(border `div`2)) ( w-(ranWidth)-(border*2) ) (h-(ranHeight)-(border*2))  (t:rs))) ++ 
-  (snd (mondrian (x) (ranHeight +(border `div`2)) (ranWidth) (h-(ranHeight)-(border*2))  (u:rs)))   ) 
-  |otherwise = (s:rs, regSquare)  
+mondrian x y w h (r:s:t:u:v:a:rs) 
+  |w>(width `div` 2) && h>(height `div` 2) && w<=width =  (s:rs, vSplit )    
+  |otherwise = if (x<w) then (r:rs, regSquare) else (r:rs, "")
   
   where
-   ranWidth = border + (round (r*(fromIntegral (w-border*2)))) 
-   ranHeight = border + (round (r*(fromIntegral (h-border*2))))
+   modifier = (border `div` 2)
+   ranWidth = x + (border `div` 2) + (round (r*(fromIntegral ((w-modifier)-x)))) 
+   ranHeight = y + (border `div` 2) + (round (r*(fromIntegral (h-(border `div` 2)))))
    canvasSquare = makeSquare x y w h (0,0,0) ++ makeSquare (x+border) (y+border) (w-(border*2)) (h-(border*2)) (0.5,0.5,0.5)
-   regSquare = makeRanSquare (x+border,y+border) ((w),ranHeight) r 
+   regSquare = makeRanSquare (x+border,y+border) (w-border,h-border) r -- border is necessary since ranWidth and ranHeight can't return 0 but x y could be 0
    testLine = makeLine (0,0) (w,h) (12,12,11) 10   
-   ranVerLine = makeLine (ranWidth, y) (ranWidth, h) (122, 1, 1) border  
-   ranHorLine = makeLine (x, ranHeight) (w, ranHeight) (1, 221, 1) border  
-   quadSplit = ranVerLine ++ ranHorLine
+   
+   ranVerLine = makeLine (ranWidth, y+border) (ranWidth, h) (122, 1, 1) border  
+   ranHorLine = makeLine (x+border, ranHeight) (w, ranHeight) (1, 221, 1) border     
+   
+   upperLeft = snd (mondrian (x) (y) (ranWidth-modifier) (ranHeight-modifier) (s:rs) )
+   upperRight = snd (mondrian (ranWidth-modifier) (y) (w-ranWidth+modifier) (ranHeight-modifier) (t:rs) )      
+   lowerRight = snd (mondrian (ranWidth-modifier) (ranHeight-modifier) (w-ranWidth+modifier) (h-ranHeight+modifier) (u:rs) )      
+   lowerLeft = snd (mondrian (x) (ranHeight-modifier) (ranWidth-modifier)  (h-ranHeight+modifier) (v:rs) )   
+   
+   rightSplit = snd (mondrian (ranWidth-modifier) (y) (w-(ranWidth-modifier))(h) (r:rs)) 
+   leftSplit = snd (mondrian (x+border) (y+border) (ranWidth-modifier) (h) (s:rs) )
+   
+   vSplit = ranVerLine  ++ rightSplit -- ++ leftSplit
+   
+   topSplit = snd (mondrian (x+border) (y+border) (w-border*2) (ranHeight-modifier) (r:rs) )
+   btmSplit = snd (mondrian (x+border) (ranHeight+border`div` 2) (w-border*2) (h-ranHeight-modifier) (u:rs) )   
+   hSplit = ranHorLine ++ topSplit ++ btmSplit
+   
+   quadSplit = ranVerLine ++ ranHorLine ++ upperLeft ++ upperRight ++ lowerRight ++ lowerLeft 
 -- fillSquare
  
   
