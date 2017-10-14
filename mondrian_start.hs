@@ -97,8 +97,8 @@ makeLine (x1, y1) (x2, y2) (r, g, b) w = "<line x1=\"" ++ x1_s ++ "\" y1=\"" ++ 
 mondrian :: Float -> Float -> Float -> Float -> [Float] -> ([Float], String)
 mondrian x y w h (r:s:t:u:v:a:rs) 
    |w>(width / 2) && h>(height / 2) && w<=width && h<=height =  (s:rs, quadSplit )   
-   -- |w>(width / 2) = (s:rs, vSplit) -- works for 1st split
-   -- |h>(height / 2) = (s:rs, hSplit)  
+   |w>(width / 2)  = (s:rs, vSplit) -- works for 1st split
+   |h>(height / 2) = (s:rs, hSplit)  
   |otherwise = (r:rs, "")
   
   where
@@ -119,13 +119,13 @@ mondrian x y w h (r:s:t:u:v:a:rs)
    
    lowerLeft = snd (mondrian (x) (ranHeight-modifier) (ranWidth-modifier)  (h-ranHeight+modifier) (v:rs) )   
    rightSplit = snd (mondrian (ranWidth-modifier) (y) (abs(w-(ranWidth-modifier)))(h) (r:rs)) 
-   leftSplit = snd (mondrian (x+border) (y+border) (w) (h) (s:rs) )
+   leftSplit = snd (mondrian (x) (y) (ranWidth-modifier-x) (h) (r:rs) )
    
-   vSplit = ranVerLine   -- ++ rightSplit   -- ++ leftSplit
+   vSplit = ranVerLine  ++ rightSplit  ++ leftSplit
    
-   topSplit = snd (mondrian (x) (y-modifier) (w) (ranHeight) (r:rs) )
-   btmSplit = snd (mondrian (x+border) (ranHeight+(border/2)) (w-border*2) (h-ranHeight-modifier) (u:rs) )   
-   hSplit = ranHorLine  -- ++ topSplit -- ++ btmSplit
+   topSplit = snd (mondrian (x) (y) (w) (ranHeight-modifier-y) (r:rs) )
+   btmSplit = snd (mondrian (x) (ranHeight+modifier) (w) (h-ranHeight-modifier) (u:rs) )   
+   hSplit = ranHorLine  ++ topSplit  ++ btmSplit -- 
    
    quadSplit = ranVerLine ++ ranHorLine ++ upperLeft ++ upperRight ++ lowerLeft 
 -- fillSquare
