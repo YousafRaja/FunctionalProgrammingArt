@@ -38,6 +38,13 @@ rl_helper g = fst vg : rl_helper (snd vg)
 randomInt :: Int -> Int -> Float -> Int
 randomInt low high x = round ((fromIntegral (high - low) * x) + fromIntegral low)
 
+--
+-- Compute an integer between 120 and w from a (presumably random) floating
+-- point number between 0 and 1.
+--
+shouldSplit :: Float -> Float -> Int
+shouldSplit w r = if ((randomInt 120 (round(w*1.5)) r)<round(w)) then 1 else 0
+
 -- Generate a tag for a random colored square given x y w h and a random float r between 0 and 1
 makeRanSquare :: (Float, Float) -> (Float, Float) -> Float -> String
 makeRanSquare (x,y) (w,h) r
@@ -96,10 +103,11 @@ makeLine (x1, y1) (x2, y2) (r, g, b) w = "<line x1=\"" ++ x1_s ++ "\" y1=\"" ++ 
 
 mondrian :: Float -> Float -> Float -> Float -> [Float] -> ([Float], String)
 mondrian x y w h (r:s:t:u:v:a:rs) 
-   |w>(width / 2) && h>(height / 2) && w<=width && h<=height =  (s:rs, quadSplit )   
-   |w>(width / 2)  = (s:rs, vSplit) -- works for 1st split
-   |h>(height / 2) = (s:rs, hSplit)  
-  |otherwise = (r:rs, "")
+   |w>(width / 2) && h>(height / 2)  =  (s:rs, quadSplit )   
+   |w>(width / 4)  = (s:rs, vSplit) -- works for 1st split
+   |h>(height / 4) = (s:rs, hSplit)  
+   -- |(shouldSplit w r)==1 && (w)>200 && (h)>200 = (s:rs, quadSplit) 
+   |otherwise = (r:rs, "")
   
   where
    modifier = (border/2)
