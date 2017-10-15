@@ -105,10 +105,14 @@ mondrian :: Float -> Float -> Float -> Float -> [Float] -> ([Float], String)
 mondrian x y w h (r:s:t:u:v:a:rs) 
    | w<0 || h<0 = (r:rs, "")
    |w>(width / 2) && h>(height / 2) =  (s:rs, quadSplit )   
-    |w>(width / 32) && w>100 && (x<(width-100))  = (s:rs, vSplit) 
-   -- |h>(height / 32) && h>100 && (y<(height-100)) = (s:rs, hSplit)  
+   |w>(width / 2) && w>100 && (x<(width-100))  = (s:rs, vSplit) 
+   |h>(height / 2) && h>100 && (y<(height-100)) = (s:rs, hSplit)  
+   |(shouldSplit w r)==1 && (shouldSplit h r)==1 && (w)>200 && (h)>200 = (s:rs, quadSplit) 
+   |(shouldSplit w r)==1 && (w)>200           = (s:rs, vSplit) 
+   |(shouldSplit h r)==1 && (h)>200           = (s:rs, hSplit) 
+   
    -- |(shouldSplit w r)==1 && (w)>200 && (h)>200 = (s:rs, quadSplit) 
-   |otherwise = (r:rs, "")
+   |otherwise = (r:rs, regSquare)
   
   where
    modifier = (border/2)
@@ -121,7 +125,7 @@ mondrian x y w h (r:s:t:u:v:a:rs)
    -- rV = (ranWidth-x)+(ranWidth+modifier) delete later
    -- vSplitLine = makeLine (x+ranWidth, y+border) (x+ranWidth, y+border+h) (122, 100, 122) border  
    
-   ranVerLine = makeLine (x+ranWidth, y+border) (x+ranWidth, y+border+h) (122, 100, 122) border  
+   ranVerLine = makeLine (x+ranWidth, y) (x+ranWidth, y+border+h) (122, 100, 122) border  
    ranHorLine = makeLine (x, y+ranHeight) (x+w, y+ranHeight) (1, 221, 1) border     
    
    upperLeft = snd (mondrian (x) (y) (ranWidth-modifier) (ranHeight-modifier) (s:rs) )
