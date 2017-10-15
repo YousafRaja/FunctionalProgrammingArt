@@ -48,10 +48,10 @@ shouldSplit w r = if ((randomInt 120 (round(w*1.5)) r)<round(w)) then 1 else 0
 -- Generate a tag for a random colored square given x y w h and a random float r between 0 and 1
 makeRanSquare :: (Float, Float) -> (Float, Float) -> Float -> String
 makeRanSquare (x,y) (w,h) r
-  | r>=0.6 = makeSquare x y w h (0.3, 0.2, 0.3) -- place holder for white
-  | r<0.6 && r>=0.4 = makeSquare x y w h (1, 0, 0) -- red
-  | r<0.4 && r>=0.2 = makeSquare x y w h (0, 0, 1) -- blue
-  | r<0.2 && r>=0.0 = makeSquare x y w h (1, 1, 0) -- yellow
+  | r<0.0833  = makeSquare x y w h (254, 0, 0) -- red
+  | r<0.1667  = makeSquare x y w h (135/255, 206/255, 234/255) -- sky blue
+  | r<0.25    = makeSquare x y w h (1, 1, 0) -- yellow
+  | otherwise = makeSquare x y w h (1, 1, 1) -- white
 
 
 
@@ -105,21 +105,21 @@ mondrian :: Float -> Float -> Float -> Float -> [Float] -> ([Float], String)
 mondrian x y w h (r:s:t:u:v:a:rs) 
    | w<0 || h<0 = (r:rs, "")
     |w>(width / 2) && h>(height / 2) =  (s:rs, quadSplit )   
-    |w>(width / 2) && w>100 && (x<(width-100))  = (s:rs, vSplit) 
-    |h>(height / 2) && h>100 && (y<(height-100)) = (s:rs, hSplit)  
+    |w>(width / 2)   = (s:rs, vSplit) 
+    |h>(height / 2)  = (s:rs, hSplit)  
     |(shouldSplit w r)==1 && (shouldSplit h r)==1 && (w)>200 && (h)>200 = (s:rs, quadSplit) 
     |(shouldSplit w r)==1 && (w)>200           = (s:rs, vSplit) 
     |(shouldSplit h r)==1 && (h)>200           = (s:rs, hSplit) 
    
-   |(shouldSplit w r)==1 && (w)>200 && (h)>200 = (s:rs, quadSplit) 
+   -- |(shouldSplit w r)==1 && (w)>200 && (h)>200 = (s:rs, quadSplit) 
    |otherwise = (r:rs, regSquare)
   
   where
    modifier = 0 --(border/2)
    halfB = border/2
    threeQuartB = border/2 + border
-   ranWidth =  (w*0.5) -- x+(w*0.4) + (r*(w*0.2))
-   ranHeight =  (h*0.5)
+   ranWidth =  (w*0.33) + (r*(w*0.34))
+   ranHeight =  (h*0.33) + (r*(h*0.34))
    canvasSquare = makeSquare x y w h (0,0,0) ++ makeSquare (x+border) (y+border) (w-(border*2)) (h-(border*2)) (0.5,0.5,0.5)
    
    regSquare = makeRanSquare (x,y) (w,h) r -- border is necessary since ranWidth and ranHeight can't return 0 but x y could be 0
@@ -132,10 +132,10 @@ mondrian x y w h (r:s:t:u:v:a:rs)
    upperLeft = snd (mondrian (x) (y) (ranWidth-halfB) (ranHeight-halfB) (s:rs) )
    upperRight = snd (mondrian (x+ranWidth+halfB) (y) (w-ranWidth-halfB) (ranHeight-halfB) (t:rs) ) 
    
-   lowerRight = snd (mondrian (x+ranWidth+halfB) (y+ranHeight+halfB) (w-ranWidth-halfB) (h-ranHeight+modifier) (u:rs) )      
+   lowerRight = snd (mondrian (x+ranWidth+halfB) (y+ranHeight+halfB) (w-ranWidth-halfB) (h-ranHeight+modifier-halfB) (u:rs) )      
    lowerLeft = snd (mondrian (x) (y+ranHeight+halfB) (ranWidth-halfB)  (h-ranHeight-halfB) (v:rs) )   
    
-   rightSplit = snd (mondrian (x+ranWidth+halfB) (y) ((ranWidth-halfB))(h) (r:rs)) 
+   rightSplit = snd (mondrian (x+ranWidth+halfB) (y) ((w-ranWidth-halfB))(h) (r:rs)) 
    leftSplit = snd (mondrian (x) (y) (ranWidth-halfB-x) (h) (r:rs) )
    
    vSplit = ranVerLine  ++ rightSplit ++ leftSplit
