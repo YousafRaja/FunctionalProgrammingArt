@@ -103,39 +103,43 @@ makeLine (x1, y1) (x2, y2) (r, g, b) w = "<line x1=\"" ++ x1_s ++ "\" y1=\"" ++ 
 
 mondrian :: Float -> Float -> Float -> Float -> [Float] -> ([Float], String)
 mondrian x y w h (r:s:t:u:v:a:rs) 
-   |w>(width / 2) && h>(height / 2)  =  (s:rs, quadSplit )   
-   |w>(width / 4)  = (s:rs, vSplit) -- works for 1st split
-   |h>(height / 4) = (s:rs, hSplit)  
+   | w<0 || h<0 = (r:rs, "")
+   |w>(width / 2) && h>(height / 2) =  (s:rs, quadSplit )   
+    |w>(width / 32) && w>100 && (x<(width-100))  = (s:rs, vSplit) 
+   -- |h>(height / 32) && h>100 && (y<(height-100)) = (s:rs, hSplit)  
    -- |(shouldSplit w r)==1 && (w)>200 && (h)>200 = (s:rs, quadSplit) 
    |otherwise = (r:rs, "")
   
   where
    modifier = (border/2)
-   ranWidth = x + (w*0.33) + (r*(w*0.33)) 
-   ranHeight = y + (h*0.33) + (r*(h*0.33))
+   ranWidth =  (w*0.5) -- x+(w*0.4) + (r*(w*0.2))
+   ranHeight =  (h*0.5)
    canvasSquare = makeSquare x y w h (0,0,0) ++ makeSquare (x+border) (y+border) (w-(border*2)) (h-(border*2)) (0.5,0.5,0.5)
    regSquare = makeRanSquare (x+border,y+border) (w-border,h-border) r -- border is necessary since ranWidth and ranHeight can't return 0 but x y could be 0
    testLine = makeLine (0,0) (w,h) (12,12,11) 10   
    
-   ranVerLine = makeLine (ranWidth, y+border) (ranWidth, y+border+h) (122, 1, 1) border  
-   ranHorLine = makeLine (x+border, ranHeight) (x+border+w, ranHeight) (1, 221, 1) border     
+   -- rV = (ranWidth-x)+(ranWidth+modifier) delete later
+   -- vSplitLine = makeLine (x+ranWidth, y+border) (x+ranWidth, y+border+h) (122, 100, 122) border  
+   
+   ranVerLine = makeLine (x+ranWidth, y+border) (x+ranWidth, y+border+h) (122, 100, 122) border  
+   ranHorLine = makeLine (x, y+ranHeight) (x+w, y+ranHeight) (1, 221, 1) border     
    
    upperLeft = snd (mondrian (x) (y) (ranWidth-modifier) (ranHeight-modifier) (s:rs) )
-   upperRight = snd (mondrian (ranWidth-modifier) (y) (w-ranWidth+modifier) (ranHeight-modifier) (t:rs) ) 
+   upperRight = snd (mondrian (x+ranWidth-modifier) (y) (w-ranWidth+modifier) (ranHeight-modifier) (t:rs) ) 
    
-   lowerRight = snd (mondrian (ranWidth-modifier) (ranHeight-modifier) (w-ranWidth+modifier) (h-ranHeight-modifier) (u:rs) )      
+   lowerRight = snd (mondrian (x+ranWidth-modifier) (y+ranHeight-modifier) (w-ranWidth+modifier) (h-ranHeight+modifier) (u:rs) )      
+   lowerLeft = snd (mondrian (x) (y+ranHeight-modifier) (ranWidth-modifier)  (h-ranHeight+modifier) (v:rs) )   
    
-   lowerLeft = snd (mondrian (x) (ranHeight-modifier) (ranWidth-modifier)  (h-ranHeight+modifier) (v:rs) )   
-   rightSplit = snd (mondrian (ranWidth-modifier) (y) (abs(w-(ranWidth-modifier)))(h) (r:rs)) 
+   rightSplit = snd (mondrian (x+ranWidth) (y) ((ranWidth))(h) (r:rs)) 
    leftSplit = snd (mondrian (x) (y) (ranWidth-modifier-x) (h) (r:rs) )
    
-   vSplit = ranVerLine  ++ rightSplit  ++ leftSplit
+   vSplit = ranVerLine  ++ rightSplit ++ leftSplit
    
    topSplit = snd (mondrian (x) (y) (w) (ranHeight-modifier-y) (r:rs) )
-   btmSplit = snd (mondrian (x) (ranHeight+modifier) (w) (h-ranHeight-modifier) (u:rs) )   
-   hSplit = ranHorLine  ++ topSplit  ++ btmSplit -- 
+   btmSplit = snd (mondrian (x) (ranHeight+modifier+y) (w) (h-ranHeight-modifier) (u:rs) )   
+   hSplit = ranHorLine  ++ btmSplit ++ topSplit
    
-   quadSplit = ranVerLine ++ ranHorLine ++ upperLeft ++ upperRight ++ lowerLeft 
+   quadSplit = ranVerLine ++ ranHorLine  ++ upperLeft    ++ lowerLeft ++  upperRight ++ lowerRight  
 -- fillSquare
  
   
