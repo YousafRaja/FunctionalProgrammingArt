@@ -104,44 +104,45 @@ makeLine (x1, y1) (x2, y2) (r, g, b) w = "<line x1=\"" ++ x1_s ++ "\" y1=\"" ++ 
 mondrian :: Float -> Float -> Float -> Float -> [Float] -> ([Float], String)
 mondrian x y w h (r:s:t:u:v:a:rs) 
    | w<0 || h<0 = (r:rs, "")
-   |w>(width / 2) && h>(height / 2) =  (s:rs, quadSplit )   
-   |w>(width / 2) && w>100 && (x<(width-100))  = (s:rs, vSplit) 
-   |h>(height / 2) && h>100 && (y<(height-100)) = (s:rs, hSplit)  
-   |(shouldSplit w r)==1 && (shouldSplit h r)==1 && (w)>200 && (h)>200 = (s:rs, quadSplit) 
-   |(shouldSplit w r)==1 && (w)>200           = (s:rs, vSplit) 
-   |(shouldSplit h r)==1 && (h)>200           = (s:rs, hSplit) 
+    |w>(width / 2) && h>(height / 2) =  (s:rs, quadSplit )   
+    |w>(width / 2) && w>100 && (x<(width-100))  = (s:rs, vSplit) 
+    |h>(height / 2) && h>100 && (y<(height-100)) = (s:rs, hSplit)  
+    |(shouldSplit w r)==1 && (shouldSplit h r)==1 && (w)>200 && (h)>200 = (s:rs, quadSplit) 
+    |(shouldSplit w r)==1 && (w)>200           = (s:rs, vSplit) 
+    |(shouldSplit h r)==1 && (h)>200           = (s:rs, hSplit) 
    
-   -- |(shouldSplit w r)==1 && (w)>200 && (h)>200 = (s:rs, quadSplit) 
+   |(shouldSplit w r)==1 && (w)>200 && (h)>200 = (s:rs, quadSplit) 
    |otherwise = (r:rs, regSquare)
   
   where
-   modifier = (border/2)
+   modifier = 0 --(border/2)
+   halfB = border/2
+   threeQuartB = border/2 + border
    ranWidth =  (w*0.5) -- x+(w*0.4) + (r*(w*0.2))
    ranHeight =  (h*0.5)
    canvasSquare = makeSquare x y w h (0,0,0) ++ makeSquare (x+border) (y+border) (w-(border*2)) (h-(border*2)) (0.5,0.5,0.5)
-   regSquare = makeRanSquare (x+border,y+border) (w-border,h-border) r -- border is necessary since ranWidth and ranHeight can't return 0 but x y could be 0
-   testLine = makeLine (0,0) (w,h) (12,12,11) 10   
    
+   regSquare = makeRanSquare (x,y) (w,h) r -- border is necessary since ranWidth and ranHeight can't return 0 but x y could be 0
+   testLine = makeLine (0,0) (w,h) (12,12,11) 10   
    -- rV = (ranWidth-x)+(ranWidth+modifier) delete later
    -- vSplitLine = makeLine (x+ranWidth, y+border) (x+ranWidth, y+border+h) (122, 100, 122) border  
-   
-   ranVerLine = makeLine (x+ranWidth, y) (x+ranWidth, y+border+h) (122, 100, 122) border  
+   ranVerLine = makeLine (x+ranWidth, y) (x+ranWidth, y+h) (122, 100, 122) border  
    ranHorLine = makeLine (x, y+ranHeight) (x+w, y+ranHeight) (1, 221, 1) border     
    
-   upperLeft = snd (mondrian (x) (y) (ranWidth-modifier) (ranHeight-modifier) (s:rs) )
-   upperRight = snd (mondrian (x+ranWidth-modifier) (y) (w-ranWidth+modifier) (ranHeight-modifier) (t:rs) ) 
+   upperLeft = snd (mondrian (x) (y) (ranWidth-halfB) (ranHeight-halfB) (s:rs) )
+   upperRight = snd (mondrian (x+ranWidth+halfB) (y) (w-ranWidth-halfB) (ranHeight-halfB) (t:rs) ) 
    
-   lowerRight = snd (mondrian (x+ranWidth-modifier) (y+ranHeight-modifier) (w-ranWidth+modifier) (h-ranHeight+modifier) (u:rs) )      
-   lowerLeft = snd (mondrian (x) (y+ranHeight-modifier) (ranWidth-modifier)  (h-ranHeight+modifier) (v:rs) )   
+   lowerRight = snd (mondrian (x+ranWidth+halfB) (y+ranHeight+halfB) (w-ranWidth-halfB) (h-ranHeight+modifier) (u:rs) )      
+   lowerLeft = snd (mondrian (x) (y+ranHeight+halfB) (ranWidth-halfB)  (h-ranHeight-halfB) (v:rs) )   
    
-   rightSplit = snd (mondrian (x+ranWidth) (y) ((ranWidth))(h) (r:rs)) 
-   leftSplit = snd (mondrian (x) (y) (ranWidth-modifier-x) (h) (r:rs) )
+   rightSplit = snd (mondrian (x+ranWidth+halfB) (y) ((ranWidth-halfB))(h) (r:rs)) 
+   leftSplit = snd (mondrian (x) (y) (ranWidth-halfB-x) (h) (r:rs) )
    
    vSplit = ranVerLine  ++ rightSplit ++ leftSplit
    
-   topSplit = snd (mondrian (x) (y) (w) (ranHeight-modifier-y) (r:rs) )
-   btmSplit = snd (mondrian (x) (ranHeight+modifier+y) (w) (h-ranHeight-modifier) (u:rs) )   
-   hSplit = ranHorLine  ++ btmSplit ++ topSplit
+   topSplit = snd (mondrian (x) (y) (w) (ranHeight-halfB-y) (r:rs) )
+   btmSplit = snd (mondrian (x) (ranHeight+halfB+y) (w) (h-ranHeight-halfB) (u:rs) )   
+   hSplit = ranHorLine ++ btmSplit ++ topSplit 
    
    quadSplit = ranVerLine ++ ranHorLine  ++ upperLeft    ++ lowerLeft ++  upperRight ++ lowerRight  
 -- fillSquare
