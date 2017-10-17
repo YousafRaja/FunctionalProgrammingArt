@@ -58,8 +58,8 @@ makeRanSquare (x,y) (w,h) r
   -- Generate a tag for a random colored square given x y w h and a random float r between 0 and 1
 makeLocSquare :: (Float, Float) -> (Float, Float) -> Float -> String
 makeLocSquare (x,y) (w,h) r
-  | r<0.10    = makeSquare x y w h (0, 1-locationFactor, 0) -- yellow
-  | otherwise = makeSquare x y w h (1-locationFactor, 0, locationFactor) -- white
+  | r<0.5    = makeSquare x y w h (1-locationFactor, r, locationFactor)
+  | otherwise = makeBlurrableSquare x y w h (1-locationFactor, r, locationFactor) 
   where
   centerX = x + (w/2)
   centerY = y + (h/2)
@@ -70,8 +70,21 @@ makeLocSquare (x,y) (w,h) r
   locationFactor = trace (show(((middleX*0.5) + (middleY*0.5)))) ((middleX*0.5) + (middleY*0.5))
 
 
+  -- Generate a tag for a square given x y w h and the R G B values as percentages
+makeBlurr ::  String
+makeBlurr = "<defs> <filter id=\"f1\" x=\"0\" y=\"0\"> <feGaussianBlur in=\"SourceGraphic\" stdDeviation=\"15\" /> </filter> </defs>"
 
-
+  -- Generate a tag for a square given x y w h and the R G B values as percentages
+makeBlurrableSquare :: Float -> Float -> Float -> Float -> (Float, Float, Float) -> String
+makeBlurrableSquare x y w h (r, g, b) = "<rect x=" ++ (show x) ++ 
+       " y=" ++ (show y) ++ 
+       " width=" ++ (show w) ++ 
+       " height=" ++ (show h) ++ 
+       " stroke=\"None\"" ++
+       " fill=\"rgb(" ++ (show (round (r * 255))) ++ "," ++
+                         (show (round (g * 255))) ++ "," ++
+                         (show (round (b * 255))) ++ ")\" ++ filter=\"url(#f1)\"/>\n" 
+  
 -- Generate a tag for a square given x y w h and the R G B values as percentages
 makeSquare :: Float -> Float -> Float -> Float -> (Float, Float, Float) -> String
 makeSquare x y w h (r, g, b) = "<rect x=" ++ (show x) ++ 
@@ -183,7 +196,7 @@ main = do
   let prefix = "<html><head></head><body>\n" ++
                "<svg width=\"" ++ (show width) ++ 
                "\" height=\"" ++ (show height) ++ "\">"
-      image = snd (mondrian 0 0 width height randomValues) ++ makeLine (border/2, 0) (border/2, height) (0, 0, 0) border ++ makeLine (0, border/2) (width, border/2) (0, 0, 0) border
+      image = makeBlurr ++ snd (mondrian 0 0 width height randomValues) ++ makeLine (border/2, 0) (border/2, height) (0, 0, 0) border ++ makeLine (0, border/2) (width, border/2) (0, 0, 0) border
       suffix = "</svg>\n</html>"
 
   writeFile "mondrian.html" (prefix ++ image ++ suffix)
