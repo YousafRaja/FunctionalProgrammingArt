@@ -70,15 +70,10 @@ makeSquare x y w h (r, g, b) = "<rect x=" ++ (show x) ++
 
 -- Generate a tag for a line given x1 y1 x2 y2 stroke(r,g,b) and stroke-width
 makeLine :: (Float, Float) -> (Float, Float) -> (Float, Float, Float) -> Float -> String
-makeLine (x1, y1) (x2, y2) (r, g, b) w = "<line x1=\"" ++ x1_s ++ "\" y1=\"" ++ y1_s ++ 
-                                        "\" x2=\"" ++ x2_s ++ "\" y2=\"" ++ y2_s ++
-                                        "\" style=\"stroke:rgb(" ++ rgb_s ++ ");stroke-width:" ++ w_s ++ "\"/>"
+makeLine (x1, y1) (x2, y2) (r, g, b) w = "<line x1=\"" ++ show (x1) ++ "\" y1=\"" ++ show (y1) ++ 
+                                        "\" x2=\"" ++ show (x2) ++ "\" y2=\"" ++ show (y2) ++
+                                        "\" style=\"stroke:rgb(" ++ rgb_s ++ ");stroke-width:" ++ show (w) ++ "\"/>"
         where 
-        x1_s = show (x1)
-        y1_s = show (y1)
-        x2_s = show (x2)
-        y2_s = show (y2)
-        w_s  = show (w)
         r_s  = show (r)
         b_s  = show (b)
         g_s  = show (g)
@@ -105,52 +100,48 @@ makeLine (x1, y1) (x2, y2) (r, g, b) w = "<line x1=\"" ++ x1_s ++ "\" y1=\"" ++ 
 
 mondrian :: Float -> Float -> Float -> Float -> [Float] -> ([Float], String)
 mondrian x y w h (r:s:t:u:v:a:b:c:d:rs) 
-   | w<0 || h<0 = (r:rs, "")
-   |w>(width / 2) && h>(height / 2) =  (b_rest, quadSplit )   
-   |w>(width / 2)   = (r:rs, vSplit) 
-   |h>(height / 2)  = (r:rs, hSplit)  
-    |(shouldSplit w r)==1 && (shouldSplit h s)==1 && (w)>120 && (h)>120 = (r:rs, quadSplit) 
-    |(shouldSplit w t)==1 && (w)>120           = (r:rs, vSplit) 
-    |(shouldSplit h u)==1 && (h)>120          = (r:rs, hSplit) 
-   
-   -- |(shouldSplit w r)==1 && (w)>200 && (h)>200 = (s:rs, quadSplit) 
+   | w<0 || h<0                                                         = (r:rs, "")
+   |w>(width / 2) && h>(height / 2)                                     = (b_rest, quadSplit )   
+   |w>(width / 2)                                                       = (r:rs, vSplit) 
+   |h>(height / 2)                                                      = (r:rs, hSplit)  
+   |(shouldSplit w r)==1 && (shouldSplit h s)==1 && (w)>120 && (h)>120  = (r:rs, quadSplit) 
+   |(shouldSplit w t)==1 && (w)>120                                     = (r:rs, vSplit) 
+   |(shouldSplit h u)==1 && (h)>120                                     = (r:rs, hSplit)    
    |otherwise = (rs, regSquare)
   
   where
-   halfB = border/2
-   ranWidth =  (w*0.33) + (t*(w*0.34))  -- (w*0.5) --
-   ranHeight =  (h*0.33) + (u*(h*0.34))   -- (h*0.5)
+   halfB                = border/2
+   ranWidth             =  (w*0.33) + (t*(w*0.34))  
+   ranHeight            =  (h*0.33) + (u*(h*0.34))   
    
-   regSquare = trace "regSquare" makeRanSquare (x,y) (w,h) r
+   regSquare            = makeRanSquare (x,y) (w,h) r
  
-   ranVerLine = trace "ranVerLine" makeLine (x+ranWidth, y) (x+ranWidth, y+h) (0, 0, 0) border  
-   ranHorLine = trace "ranHorLine" makeLine (x, y+ranHeight) (x+w, y+ranHeight) (0, 0, 0) border     
+   ranVerLine           = makeLine (x+ranWidth, y) (x+ranWidth, y+h) (0, 0, 0) border  
+   ranHorLine           = makeLine (x, y+ranHeight) (x+w, y+ranHeight) (0, 0, 0) border     
    
    
-   vSplit = trace "vSplit" ranVerLine  ++ r_tags ++ l_tags
+   vSplit               = ranVerLine  ++ r_tags ++ l_tags
    
-   topSplit = trace "topSplit" snd (mondrian (x) (y) (w) (ranHeight-halfB) (c:rs) )
-   btmSplit = trace "btmSplit" snd (mondrian (x) (ranHeight+halfB+y) (w) (h-ranHeight-halfB) (d:rs) )   
+   topSplit             = snd (mondrian (x) (y) (w) (ranHeight-halfB) (c:rs) )
+   btmSplit             = snd (mondrian (x) (ranHeight+halfB+y) (w) (h-ranHeight-halfB) (d:rs) )   
    
-   hSplit = trace "hSplit" ranHorLine  ++ t_tags ++ b_tags 
+   hSplit               = ranHorLine  ++ t_tags ++ b_tags 
    
-   quadSplit = trace "quadSplit" ranVerLine ++ ranHorLine  ++ ul_tags ++ ll_tags ++  ur_tags ++ lr_tags
+   quadSplit            = ranVerLine ++ ranHorLine  ++ ul_tags ++ ll_tags ++  ur_tags ++ lr_tags
    
-   (ul_rest, ul_tags) = (mondrian (x) (y) (ranWidth-halfB) (ranHeight-halfB) (rs))
-   (ll_rest, ll_tags) = (mondrian (x) (y+ranHeight+halfB) (ranWidth-halfB)  (h-ranHeight-halfB) (ul_rest))   
+   (ul_rest, ul_tags)   = (mondrian (x) (y) (ranWidth-halfB) (ranHeight-halfB) (rs))
+   (ll_rest, ll_tags)   = (mondrian (x) (y+ranHeight+halfB) (ranWidth-halfB)  (h-ranHeight-halfB) (ul_rest))   
    
-   (ur_rest, ur_tags) = (mondrian (x+ranWidth+halfB) (y) (w-ranWidth-halfB) (ranHeight-halfB) (ll_rest))
-   (lr_rest, lr_tags) = (mondrian (x+ranWidth+halfB) (y+ranHeight+halfB) (w-ranWidth-halfB) (h-ranHeight-halfB) (ur_rest))
+   (ur_rest, ur_tags)   = (mondrian (x+ranWidth+halfB) (y) (w-ranWidth-halfB) (ranHeight-halfB) (ll_rest))
+   (lr_rest, lr_tags)   = (mondrian (x+ranWidth+halfB) (y+ranHeight+halfB) (w-ranWidth-halfB) (h-ranHeight-halfB) (ur_rest))
    
-   (r_rest, r_tags) = (mondrian (x+ranWidth+halfB) (y) (w-ranWidth-halfB) (h) (lr_rest))
-   (l_rest, l_tags) = (mondrian (x) (y) (ranWidth-halfB) (h) (r_rest))
+   (r_rest, r_tags)     = (mondrian (x+ranWidth+halfB) (y) (w-ranWidth-halfB) (h) (lr_rest))
+   (l_rest, l_tags)     = (mondrian (x) (y) (ranWidth-halfB) (h) (r_rest))
    
-   (b_rest, b_tags) = (mondrian (x) (ranHeight+halfB+y) (w) (h-ranHeight-halfB) (l_rest))
-   (t_rest, t_tags) = (mondrian (x) (y) (w) (ranHeight-halfB) (b_rest))
+   (b_rest, b_tags)     = (mondrian (x) (ranHeight+halfB+y) (w) (h-ranHeight-halfB) (l_rest))
+   (t_rest, t_tags)     = (mondrian (x) (y) (w) (ranHeight-halfB) (b_rest))
    
--- fillSquare
- 
-  
+
 
 --
 -- The main program which generates and outputs mondrian.html.
