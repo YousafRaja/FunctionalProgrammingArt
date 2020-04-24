@@ -1,5 +1,5 @@
 # Why does this matter?
-With this assignment I accidently deleted the entire project about a day before it was due (this was before I appreciated the importance of version control). Within a few hours I was able to re-build it from scratch. Such a quick recovery would not have been possible with an imperative programming language that typically has many states to keep track of. 
+I accidently deleted this entire project about a day before it was due (this was before I appreciated the importance of version control). Within a few hours I was able to re-build it from scratch. Such a quick recovery would not have been possible with an imperative programming language that typically has many states to keep track of. 
 Experience working in a purely functional programming language has had a lasting impact on how I structure my code. 
 
 # mondriell
